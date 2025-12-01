@@ -1,0 +1,10 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- 蓝色背景 -->
+  <circle cx="64" cy="64" r="60" fill="#1a73e8"/>
+  
+  <!-- 眼睛轮廓 -->
+  <path d="M24 64 C24 64 44 34 64 34 C84 34 104 64 104 64 C104 64 84 94 64 94 C44 94 24 64 24 64 Z" fill="none" stroke="white" stroke-width="8" stroke-linejoin="round"/>
+  
+  <!-- 闭眼/禁止线 -->
+  <line x1="20" y1="20" x2="108" y2="108" stroke="white" stroke-width="8" stroke-linecap="round"/>
+</svg>

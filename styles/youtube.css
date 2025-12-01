@@ -1,0 +1,8 @@
+/* 顶部导航栏左侧的 Logo */
+#logo, 
+ytd-topbar-logo-renderer,
+a#logo {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}

@@ -1,0 +1,17 @@
+/* 搜索首页的大 Logo */
+.lnXdpd, 
+img[alt="Google"],
+#hplogo {
+    display: none !important;
+}
+
+/* 搜索结果页左上角的小 Logo */
+.logo, 
+a#logo {
+    display: none !important; 
+}
+
+/* 隐藏 Doodle */
+#doodle {
+    display: none !important;
+}

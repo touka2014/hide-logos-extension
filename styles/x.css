@@ -1,0 +1,12 @@
+/* 左侧侧边栏顶部的 X 图标 */
+h1[role="heading"] a,
+a[aria-label="Twitter"],
+a[aria-label="X"] {
+    display: none !important;
+}
+
+/* 加载时的全屏大图标 */
+#react-root svg[aria-label="X"],
+#react-root svg[aria-label="Twitter"] {
+     display: none !important;
+}
