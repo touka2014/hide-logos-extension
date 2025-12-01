@@ -1,4 +1,4 @@
-# Focus Mode: Privacy Guard & Distraction Blocker
+# Hide Logos Extension: Privacy Guard & Distraction Blocker
 
 > A lightweight Chrome Extension designed to enhance focus and protect user privacy by obscuring website branding and obfuscating browser tab details.
 
@@ -8,7 +8,7 @@
 
 ## 📖 Overview
 
-**Focus Mode** is a comprehensive browser extension built to minimize visual distractions and preventing "shoulder surfing." Whether you are working in a public cafe or sharing your screen, this tool allows you to mask the visual identity of specific websites (like YouTube, X/Twitter, Gmail) and disguise the browser tab to look like a generic "New Tab."
+**Hide Logos** is a comprehensive browser extension built to minimize visual distractions and preventing "shoulder surfing." Whether you are working in a public cafe or sharing your screen, this tool allows you to mask the visual identity of specific websites (like YouTube, X/Twitter, Gmail) and disguise the browser tab to look like a generic "New Tab."
 
 It features a clean popup interface with granular controls, allowing users to toggle features independently.
 
@@ -35,7 +35,7 @@ Since this extension is not yet hosted on the Chrome Web Store, you can install 
 
 1.  **Clone or Download** this repository.
     ```bash
-    git clone https://github.com/your-username/focus-mode-extension.git
+    git clone https://github.com/touka2014/hide-logos-extension.git
     ```
 2.  Open your browser and navigate to the Extensions management page:
     *   Chrome: `chrome://extensions/`
