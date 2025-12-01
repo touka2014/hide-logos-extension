@@ -1,74 +1,138 @@
-/* content.js - V2.0 Stable Version */
-// 1. Transparent Icon
+/* content.js - V3.0 Controllable Version */
+
+// --- Static Assets Definition ---
 const transparentIcon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==";
-// 2. Mask Title
 const maskTitle = "New Tab"; 
-// 3. In-page Logo Hiding Rules (Retained from previous version, excluding listener logic)
+let originalTitle = document.title || ""; // Attempt to record the original title for restoration
+
+// CSS Rules
 const styleRules = `
-    /* YouTube */
-    #logo, ytd-topbar-logo-renderer { opacity: 0 !important; pointer-events: none !important; }
-    /* Google */
-    .lnXdpd, img[alt="Google"], .logo, a[href^="/webhp"] { opacity: 0 !important; }
-    /* X (Twitter) */
-    h1[role="heading"] a, a[aria-label="X"], a[aria-label="Twitter"] { opacity: 0 !important; }
-    /* Gmail */
-    .gb_Kd, a.gb_ve, img.gb_Mc { opacity: 0 !important; }
+    #logo, ytd-topbar-logo-renderer, 
+    .lnXdpd, img[alt="Google"], .logo, a[href^="/webhp"], 
+    h1[role="heading"] a, a[aria-label="X"], a[aria-label="Twitter"], 
+    .gb_Kd, a.gb_ve, img.gb_Mc 
+    { opacity: 0 !important; pointer-events: none !important; }
 `;
-// Inject CSS (Much better performance than hiding logos via JS loops)
-const styleChart = document.createElement('style');
-styleChart.textContent = styleRules;
-document.head.appendChild(styleChart);
-// --- Core Fix: Safe Favicon & Title Replacement Logic ---
-function obfuscateTab() {
-    // A. Replace Icon
-    // Find all icon-related links
+
+// State Variables
+let isLogoHidden = false;
+let isTabMasked = false;
+let observer = null; // Observer instance for Tab monitoring
+let logoStyleElement = null; // Style tag instance for storing CSS
+
+// ==============================================
+// Function Module A: Hide Website Logo (Pure CSS Operation)
+// ==============================================
+function toggleLogoHiding(shouldHide) {
+    if (shouldHide) {
+        if (!document.getElementById('hide-logos-style')) {
+            logoStyleElement = document.createElement('style');
+            logoStyleElement.id = 'hide-logos-style';
+            logoStyleElement.textContent = styleRules;
+            document.head.appendChild(logoStyleElement);
+        }
+    } else {
+        const existingStyle = document.getElementById('hide-logos-style');
+        if (existingStyle) {
+            existingStyle.remove();
+        }
+    }
+}
+
+// ==============================================
+// Function Module B: Mask Tab (JS Logic & Listeners)
+// ==============================================
+
+// Execute masking logic once
+function applyTabMask() {
+    // 1. Icon processing
     const links = document.head.querySelectorAll("link[rel*='icon']");
     let hasIcon = false;
     links.forEach(link => {
         hasIcon = true;
-        // Critical Check: If it is already transparent, do NOT touch it to prevent infinite loops.
         if (link.href !== transparentIcon) {
+            // Save original icon URL, usually used for "Restore Function" (complex restoration not implemented here)
             link.href = transparentIcon;
         }
     });
-    // If no icon tag exists, create one to prevent the browser from loading the default favicon.ico.
     if (!hasIcon) {
         const link = document.createElement('link');
         link.rel = 'icon';
         link.href = transparentIcon;
         document.head.appendChild(link);
     }
-    // B. Modify Title (Prevent others from seeing text that reveals you are watching YouTube)
-    // Only modify if the title is not the mask title we want.
+
+    // 2. Title processing
     if (document.title !== maskTitle) {
+        // If current title is not "New Tab", it means it hasn't changed yet, or was changed back by the website
+        // Update originalTitle only when it looks like a real title (not "New Tab")
+        // This step is hard to perfect because X/Gmail titles change constantly
         document.title = maskTitle;
     }
 }
-// --- Execution Logic ---
-// 1. Run immediately once
-obfuscateTab();
-// 2. Use a more elegant listener
-// We only listen for changes in the <head> tag, as icons and titles are located there.
-// Even if X/Gmail updates page content (body) frequently, it won't trigger here.
-const observer = new MutationObserver((mutations) => {
-    // Use debouncing or simple checks; avoid executing complex logic on every tiny change.
-    // Here we only trigger when child nodes in head are added/removed or attributes change.
-    obfuscateTab();
-});
-observer.observe(document.head, {
-    childList: true, // Listen for new tags added to <head>
-    attributes: true, // Listen for tag attribute changes in <head> (e.g. Gmail changing icons)
-    subtree: true,    // Listen to descendants of <head> (icon tags are usually at the first level, but might be nested)
-    attributeFilter: ['href', 'rel'] // Performance optimization: Only care about href and rel attribute changes
-});
-// 3. Special listener for Title (Some frameworks change title not via head DOM manipulation, but by direct property assignment)
-const titleObserver = new MutationObserver(() => {
-    if (document.title !== maskTitle) {
-        document.title = maskTitle;
+
+function startTabObserver() {
+    if (observer) return; // Already running
+
+    // Execute immediately once
+    applyTabMask();
+
+    // Start listening
+    observer = new MutationObserver((mutations) => {
+        if(isTabMasked) {
+            applyTabMask(); // Force overwrite only when enabled
+        }
+    });
+    
+    // Monitor Title and Head changes
+    observer.observe(document.head, { childList: true, attributes: true, subtree: true, attributeFilter: ['href', 'rel'] });
+    const titleEl = document.querySelector('title');
+    if(titleEl) observer.observe(titleEl, { childList: true });
+}
+
+function stopTabObserver() {
+    if (observer) {
+        observer.disconnect();
+        observer = null;
+    }
+    // Attempt to restore title (Optional)
+    // Note: Hard to restore Favicon because we modified the href. Full restoration usually recommends users refresh the page.
+    // Here we just stop interfering. If you want to manually restore the title, uncomment below:
+    // if (document.title === maskTitle && originalTitle) {
+    //     document.title = originalTitle; 
+    // }
+}
+
+function toggleTabMasking(shouldMask) {
+    isTabMasked = shouldMask;
+    if (shouldMask) {
+        startTabObserver();
+    } else {
+        stopTabObserver();
+    }
+}
+
+// ==============================================
+// Main Control Logic
+// ==============================================
+
+function loadSettingsAndApply() {
+    chrome.storage.sync.get(['hideLogos', 'maskTab'], (result) => {
+        // Default value is true
+        const hideLogos = result.hideLogos !== false;
+        const maskTab = result.maskTab !== false;
+
+        toggleLogoHiding(hideLogos);
+        toggleTabMasking(maskTab);
+    });
+}
+
+// 1. Run on page load
+loadSettingsAndApply();
+
+// 2. Listen for messages from Popup (Real-time toggle)
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.type === 'UPDATE_SETTINGS') {
+        loadSettingsAndApply();
     }
 });
-// Handle cases where the title tag might not exist yet due to the framework not finishing rendering
-const titleElement = document.querySelector('title');
-if(titleElement) {
-    titleObserver.observe(titleElement, { childList: true });
-}
