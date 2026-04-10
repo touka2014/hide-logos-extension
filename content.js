@@ -33,8 +33,8 @@ async function loadCSSFromFiles() {
       )
     );
     cssCache = responses.join('\n');
-  } catch {
-    // Fallback: if fetching fails, use empty string
+  } catch (error) {
+    console.warn('[Hide Logos] Failed to load CSS files:', error);
     cssCache = '';
   }
   return cssCache;
