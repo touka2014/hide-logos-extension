@@ -62,7 +62,14 @@ Since this extension is not yet hosted on the Chrome Web Store, you can install 
 ├── content.js          # Core logic (DOM manipulation, MutationObservers)
 ├── popup.html          # Extension popup UI
 ├── popup.js            # Popup logic and State management
+├── popup.css           # Popup styles
+├── styles/             # Per-site CSS rules for hiding logos
+│   ├── youtube.css
+│   ├── google.css
+│   ├── gmail.css
+│   └── x.css
 ├── icons/              # Application icons
+├── LICENSE             # MIT License
 └── README.md           # Documentation
 ```
 
