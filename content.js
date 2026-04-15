@@ -1,43 +1,59 @@
-/* content.js - V4.0 Modular & Optimized Version */
+/* content.js - V5.0 Per-Site Control Version */
 'use strict';
 
 // --- Constants ---
 const TRANSPARENT_ICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==';
-const MASK_TITLE = 'New Tab';
 const STYLE_ELEMENT_ID = 'hide-logos-style';
+const GENERIC_STYLE_ID = 'hide-logos-generic-style';
 
-// External CSS files to load (single source of truth lives in styles/)
-const CSS_FILES = [
-  'styles/youtube.css',
-  'styles/google.css',
-  'styles/x.css',
-  'styles/gmail.css'
-];
+// Predefined CSS files for known sites
+const SITE_CSS_MAP = {
+  'youtube.com': 'styles/youtube.css',
+  'google.com': 'styles/google.css',
+  'mail.google.com': 'styles/gmail.css',
+  'x.com': 'styles/x.css',
+  'twitter.com': 'styles/x.css'
+};
+
+const GENERIC_CSS_FILE = 'styles/generic.css';
 
 // --- State ---
-let isTabMasked = false;
+let isTabIconHidden = false;
 let tabObserver = null;
-let cssCache = null; // Cached concatenated CSS content
+let cssCache = {};
 
 // ==============================================
-// CSS Loading — fetches and caches external style files
+// Helpers
 // ==============================================
 
-async function loadCSSFromFiles() {
-  if (cssCache !== null) return cssCache;
+function getHostname() {
+  return location.hostname.replace(/^www\./, '');
+}
 
-  try {
-    const responses = await Promise.all(
-      CSS_FILES.map(file =>
-        fetch(chrome.runtime.getURL(file)).then(res => res.text())
-      )
-    );
-    cssCache = responses.join('\n');
-  } catch (error) {
-    console.warn('[Hide Logos] Failed to load CSS files:', error);
-    cssCache = '';
+function getMatchingSiteCSSFiles(hostname) {
+  const files = [];
+  for (const [site, file] of Object.entries(SITE_CSS_MAP)) {
+    if (hostname === site || hostname.endsWith('.' + site)) {
+      files.push(file);
+    }
   }
-  return cssCache;
+  return files;
+}
+
+// ==============================================
+// CSS Loading
+// ==============================================
+
+async function loadCSS(file) {
+  if (cssCache[file] !== undefined) return cssCache[file];
+  try {
+    const res = await fetch(chrome.runtime.getURL(file));
+    cssCache[file] = await res.text();
+  } catch (e) {
+    console.warn('[Hide Logos] Failed to load', file, e);
+    cssCache[file] = '';
+  }
+  return cssCache[file];
 }
 
 // ==============================================
@@ -46,27 +62,39 @@ async function loadCSSFromFiles() {
 
 async function toggleLogoHiding(shouldHide) {
   if (shouldHide) {
-    if (!document.getElementById(STYLE_ELEMENT_ID)) {
-      const css = await loadCSSFromFiles();
+    const hostname = getHostname();
+    const siteFiles = getMatchingSiteCSSFiles(hostname);
+
+    // Inject predefined CSS for known sites
+    if (siteFiles.length > 0 && !document.getElementById(STYLE_ELEMENT_ID)) {
+      const parts = await Promise.all(siteFiles.map(f => loadCSS(f)));
       const style = document.createElement('style');
       style.id = STYLE_ELEMENT_ID;
-      style.textContent = css;
+      style.textContent = parts.join('\n');
+      (document.head || document.documentElement).appendChild(style);
+    }
+
+    // Always inject generic CSS for broader coverage
+    if (!document.getElementById(GENERIC_STYLE_ID)) {
+      const genericCSS = await loadCSS(GENERIC_CSS_FILE);
+      const style = document.createElement('style');
+      style.id = GENERIC_STYLE_ID;
+      style.textContent = genericCSS;
       (document.head || document.documentElement).appendChild(style);
     }
   } else {
     const existing = document.getElementById(STYLE_ELEMENT_ID);
-    if (existing) {
-      existing.remove();
-    }
+    if (existing) existing.remove();
+    const generic = document.getElementById(GENERIC_STYLE_ID);
+    if (generic) generic.remove();
   }
 }
 
 // ==============================================
-// Module B: Mask Tab (favicon & title)
+// Module B: Hide Tab Favicon
 // ==============================================
 
-function applyTabMask() {
-  // 1. Favicon — replace all existing icons or create one
+function applyFaviconHide() {
   const iconLinks = document.head
     ? document.head.querySelectorAll("link[rel*='icon']")
     : [];
@@ -85,21 +113,16 @@ function applyTabMask() {
     link.href = TRANSPARENT_ICON;
     document.head.appendChild(link);
   }
-
-  // 2. Title
-  if (document.title !== MASK_TITLE) {
-    document.title = MASK_TITLE;
-  }
 }
 
 function startTabObserver() {
   if (tabObserver) return;
 
-  applyTabMask();
+  applyFaviconHide();
 
   tabObserver = new MutationObserver(() => {
-    if (isTabMasked) {
-      applyTabMask();
+    if (isTabIconHidden) {
+      applyFaviconHide();
     }
   });
 
@@ -111,11 +134,6 @@ function startTabObserver() {
       attributeFilter: ['href', 'rel']
     });
   }
-
-  const titleEl = document.querySelector('title');
-  if (titleEl) {
-    tabObserver.observe(titleEl, { childList: true });
-  }
 }
 
 function stopTabObserver() {
@@ -125,9 +143,9 @@ function stopTabObserver() {
   }
 }
 
-function toggleTabMasking(shouldMask) {
-  isTabMasked = shouldMask;
-  if (shouldMask) {
+function toggleTabIconHiding(shouldHide) {
+  isTabIconHidden = shouldHide;
+  if (shouldHide) {
     startTabObserver();
   } else {
     stopTabObserver();
@@ -139,12 +157,19 @@ function toggleTabMasking(shouldMask) {
 // ==============================================
 
 function loadSettingsAndApply() {
-  chrome.storage.sync.get(['hideLogos', 'maskTab'], (result) => {
-    const hideLogos = result.hideLogos !== false;
-    const maskTab = result.maskTab !== false;
+  const hostname = getHostname();
+  chrome.storage.sync.get(['hideLogos', 'maskTab', 'siteSettings'], (result) => {
+    const globalHideLogo = result.hideLogos === true;
+    const globalHideTab = result.maskTab === true;
+    const siteSettings = result.siteSettings || {};
+    const site = siteSettings[hostname];
 
-    toggleLogoHiding(hideLogos);
-    toggleTabMasking(maskTab);
+    // Per-site overrides global; if per-site not set, use global default
+    const hideLogo = site && site.hideLogo !== undefined ? site.hideLogo : globalHideLogo;
+    const hideTabIcon = site && site.hideTabIcon !== undefined ? site.hideTabIcon : globalHideTab;
+
+    toggleLogoHiding(hideLogo);
+    toggleTabIconHiding(hideTabIcon);
   });
 }
 

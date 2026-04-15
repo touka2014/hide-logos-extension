@@ -5,20 +5,45 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <h3>Privacy Settings</h3>
-  
-  <!-- Switch 1: Hide Logos -->
+  <h3>Hide Logos</h3>
+
+  <!-- Current Site Section -->
+  <div class="section-label" id="siteHeader">Current Site</div>
+  <div class="site-name" id="currentSite">—</div>
+
   <div class="setting-item">
-    <span class="label">Hide Site Logos</span>
+    <span class="label">Hide Page Logo</span>
+    <label class="switch">
+      <input type="checkbox" id="siteLogoSwitch">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="setting-item">
+    <span class="label">Hide Tab Icon</span>
+    <label class="switch">
+      <input type="checkbox" id="siteTabSwitch">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <button id="resetSiteBtn" class="reset-btn">Reset to Default</button>
+
+  <div class="divider"></div>
+
+  <!-- Global Defaults -->
+  <div class="section-label">Global Defaults</div>
+
+  <div class="setting-item">
+    <span class="label">Hide All Logos</span>
     <label class="switch">
       <input type="checkbox" id="toggleSwitchLogo">
       <span class="slider"></span>
     </label>
   </div>
 
-  <!-- Switch 2: Mask Tab -->
   <div class="setting-item">
-    <span class="label">Mask Tab Info</span>
+    <span class="label">Hide All Tab Icons</span>
     <label class="switch">
       <input type="checkbox" id="toggleSwitchTab">
       <span class="slider"></span>
@@ -26,7 +51,7 @@
   </div>
 
   <div class="footer-note">
-    Refresh page to apply changes
+    Per-site settings override global defaults
   </div>
 
   <script src="popup.js"></script>

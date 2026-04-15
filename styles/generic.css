@@ -1,0 +1,27 @@
+/* Generic logo hiding rules for any website */
+
+/* Common logo selectors by class/id naming conventions */
+[class*="logo" i],
+[id*="logo" i],
+[class*="brand" i][class*="icon" i],
+[class*="brand" i][class*="img" i],
+[aria-label*="logo" i] {
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Header area logo images (conservative: only direct children of nav/header links) */
+header a > img:first-child,
+nav a > img:first-child,
+[role="banner"] a > img:first-child {
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* SVG logos commonly placed in headers */
+header a > svg:first-child,
+nav a > svg:first-child,
+[role="banner"] a > svg:first-child {
+    visibility: hidden !important;
+    opacity: 0 !important;
+}

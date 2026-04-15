@@ -1,6 +1,6 @@
-# Hide Logos Extension: Privacy Guard & Distraction Blocker
+# Hide Logos Extension: Per-Site Privacy & Distraction Control
 
-> A lightweight Chrome Extension designed to enhance focus and protect user privacy by obscuring website branding and obfuscating browser tab details.
+> A lightweight Chrome Extension that gives users full control over hiding website logos and tab favicons on a per-site basis.
 
 ![Manifest Version](https://img.shields.io/badge/Manifest-V3-blue)
 ![Platform](https://img.shields.io/badge/Platform-Chrome%20%7C%20Edge%20%7C%20Brave-green)
@@ -8,26 +8,30 @@
 
 ## 📖 Overview
 
-**Hide Logos** is a comprehensive browser extension built to minimize visual distractions and preventing "shoulder surfing." Whether you are working in a public cafe or sharing your screen, this tool allows you to mask the visual identity of specific websites (like YouTube, X/Twitter, Gmail) and disguise the browser tab to look like a generic "New Tab."
+**Hide Logos** is a browser extension that lets you selectively hide website logos and browser tab favicons on any site you visit. Nothing is hidden by default — you decide which sites to clean up, either individually or via global defaults.
 
-It features a clean popup interface with granular controls, allowing users to toggle features independently.
+Whether you're working in a public space, sharing your screen, or simply want a cleaner browsing experience, this extension provides granular, per-site control through a clean popup interface.
 
 ## ✨ Key Features
 
-*   **🚫 Visual Noise Reduction**: Automatically hides prominent logos and branding elements on supported platforms (YouTube, Google, X, Gmail) using non-blocking CSS injection.
-*   **🕵️ Tab Obfuscation**: Masks the browser tab's favicon (using a transparent 1x1 pixel) and renames the title to "New Tab" to prevent onlookers from identifying active sites.
-*   **⚡ Reactive State Management**: Changes apply in real-time without requiring a page reload (via Runtime Messaging).
+*   **🎯 Per-Site Control**: Independently toggle logo hiding and tab icon hiding for each website you visit.
+*   **🌐 Global Defaults**: Set baseline preferences that apply to all sites without custom overrides.
+*   **🔕 Off by Default**: No sites are affected until you explicitly enable hiding — zero surprises.
+*   **🚫 Generic Logo Detection**: Works on any website using common logo selector patterns, not just predefined sites.
+*   **⚡ Real-Time Updates**: Changes apply instantly without requiring a page reload.
 *   **🔒 Privacy-First Design**: Operates entirely locally. No external data transmission.
-*   **💾 Settings Persistence**: User preferences are saved via the Chrome Storage API.
+*   **💾 Persistent Settings**: User preferences are synced via the Chrome Storage API.
 
 ## 🛠 Supported Platforms
 
-The extension currently targets the following Single Page Applications (SPAs) and sites:
+The extension includes **optimized CSS rules** for the following sites:
 
-*   **YouTube** (Hides Topbar Logo)
-*   **Google Search** (Hides Doodles and Main Logo)
-*   **X (formerly Twitter)** (Hides Home Bird/X Logo)
-*   **Gmail** (Hides Logo and prevents dynamic title updates)
+*   **YouTube** — Hides topbar logo
+*   **Google Search** — Hides doodles and main logo
+*   **X (formerly Twitter)** — Hides home X/bird logo
+*   **Gmail** — Hides header logo
+
+Additionally, a **generic ruleset** targets common logo patterns (`[class*="logo"]`, `header a > img`, etc.) so logo hiding works on **any website**.
 
 ## 🚀 Installation (Developer Mode)
 
@@ -40,46 +44,48 @@ Since this extension is not yet hosted on the Chrome Web Store, you can install 
 2.  Open your browser and navigate to the Extensions management page:
     *   Chrome: `chrome://extensions/`
     *   Edge: `edge://extensions/`
-3.  Enable **Developer mode** (toggle switch usually located in the top right corner).
+3.  Enable **Developer mode** (toggle in the top-right corner).
 4.  Click **Load unpacked**.
-5.  Select the directory where you cloned/downloaded this repository.
+5.  Select the cloned/downloaded directory.
 
 ## 📖 Usage
 
-1.  Click the extension icon in the browser toolbar.
-2.  Use the toggle switches to configure your preference:
-    *   **Hide Site Logos**: Toggles the visibility of website branding.
-    *   **Mask Tab Info**: Toggles the obfuscation of the Tab Title and Favicon.
-3.  The changes will apply immediately to the active tab.
+1.  Navigate to any website.
+2.  Click the extension icon in the browser toolbar. The popup shows the current site's hostname.
+3.  Toggle the **per-site** switches:
+    *   **Hide Page Logo** — Hides logos on the current site.
+    *   **Hide Tab Icon** — Replaces the current site's favicon with a transparent pixel.
+4.  Optionally configure **Global Defaults** to set the baseline behavior for all sites.
+5.  Use **Reset to Default** to remove per-site overrides and fall back to the global settings.
 
-> **Note:** For complex SPAs (e.g., Gmail) that aggressively update the DOM, the extension utilizes `MutationObserver` to ensure the mask remains active.
+> **Note:** Per-site settings always take priority over global defaults.
 
 ## 📂 Project Structure
 
 ```text
 .
 ├── manifest.json       # Manifest V3 configuration
-├── content.js          # Core logic (DOM manipulation, MutationObservers)
-├── popup.html          # Extension popup UI
-├── popup.js            # Popup logic and State management
+├── content.js          # Core logic (CSS injection, favicon replacement, MutationObserver)
+├── popup.html          # Extension popup UI (per-site + global controls)
+├── popup.js            # Popup logic and per-site state management
 ├── popup.css           # Popup styles
-├── styles/             # Per-site CSS rules for hiding logos
-│   ├── youtube.css
-│   ├── google.css
-│   ├── gmail.css
-│   └── x.css
-├── icons/              # Application icons
+├── styles/             # CSS rules for hiding logos
+│   ├── youtube.css     # YouTube-specific rules
+│   ├── google.css      # Google Search-specific rules
+│   ├── gmail.css       # Gmail-specific rules
+│   ├── x.css           # X/Twitter-specific rules
+│   └── generic.css     # Generic rules for any website
+├── icons/              # Extension icons
 ├── LICENSE             # MIT License
 └── README.md           # Documentation
 ```
 
 ## 🔧 Technical Details
 
-*   **Manifest V3**: Compliant with the latest Chrome Extension specification.
-*   **Performance Optimization**: 
-    *   Logos are hidden via `CSSStyleSheet` injection rather than JavaScript polling to minimize Main Thread blocking.
-    *   `MutationObserver` is scoped strictly to `<head>` for Tab masking to prevent performance degradation on high-frequency DOM update sites like X/Twitter.
-*   **Error Handling**: Implements Promise-based message passing with `chrome.runtime.lastError` checks to handle asynchronous communication gracefully.
+*   **Manifest V3**: Fully compliant with the latest Chrome Extension specification.
+*   **Per-Site Storage**: Site-specific preferences are stored under `siteSettings[hostname]` in `chrome.storage.sync`.
+*   **Performance**: Logos are hidden via CSS injection rather than JavaScript polling. `MutationObserver` is scoped to `<head>` for favicon replacement only.
+*   **Error Handling**: Promise-based message passing with graceful connection error handling.
 
 ## 🤝 Contributing
 
