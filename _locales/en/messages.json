@@ -1,0 +1,148 @@
+{
+  "appName": {
+    "message": "Hide Logos"
+  },
+  "appDescription": {
+    "message": "Hide website branding, tab icons and optional tab titles with reversible per-site controls."
+  },
+  "languageCode": {
+    "message": "en"
+  },
+  "tagline": {
+    "message": "Less branding. More discretion."
+  },
+  "currentWebsite": {
+    "message": "CURRENT WEBSITE"
+  },
+  "loading": {
+    "message": "Loading…"
+  },
+  "checkingPage": {
+    "message": "Checking this page…"
+  },
+  "quickHide": {
+    "message": "Hide logo & tab icon"
+  },
+  "siteControlsLabel": {
+    "message": "Settings for the current website"
+  },
+  "pageBranding": {
+    "message": "Page branding"
+  },
+  "tabIcon": {
+    "message": "Tab icon"
+  },
+  "tabTitle": {
+    "message": "Tab title"
+  },
+  "maskedTitle": {
+    "message": "Page"
+  },
+  "titleNote": {
+    "message": "Hidden titles appear as “$TITLE$”.",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      }
+    }
+  },
+  "resetSite": {
+    "message": "Use global defaults for this website"
+  },
+  "moreSettings": {
+    "message": "More settings"
+  },
+  "genericControlsLabel": {
+    "message": "Additional rules for this website"
+  },
+  "genericRules": {
+    "message": "Generic logo rules"
+  },
+  "genericNote": {
+    "message": "Use common logo patterns in headers. Requires Page branding; may hide other matching images."
+  },
+  "globalDefaults": {
+    "message": "GLOBAL DEFAULTS"
+  },
+  "globalNote": {
+    "message": "Used by websites without their own override."
+  },
+  "footerNote": {
+    "message": "Changes apply across open tabs."
+  },
+  "sourceGlobal": {
+    "message": "Global default"
+  },
+  "sourceWebsite": {
+    "message": "This website"
+  },
+  "openWebsite": {
+    "message": "Open a website to use per-site controls."
+  },
+  "pageUnavailable": {
+    "message": "Not applied. Refresh the page; browser-protected pages are unavailable."
+  },
+  "noLogoRules": {
+    "message": "No logo rules for this site. Enable generic rules below."
+  },
+  "appliedOne": {
+    "message": "Applied to this page · $COUNT$ option",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "appliedMany": {
+    "message": "Applied to this page · $COUNT$ options",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "nothingHidden": {
+    "message": "Nothing hidden on this page"
+  },
+  "saveError": {
+    "message": "Could not save settings. Please try again."
+  },
+  "reloadError": {
+    "message": "Could not reload settings. Reopen this popup to try again."
+  },
+  "noWebsite": {
+    "message": "No website selected"
+  },
+  "siteSupported": {
+    "message": "$SITE$ · dedicated logo rules",
+    "placeholders": {
+      "site": {
+        "content": "$1"
+      }
+    }
+  },
+  "siteUnsupported": {
+    "message": "Tab controls available · generic logo rules optional"
+  },
+  "globalAvailable": {
+    "message": "Global defaults are still available."
+  },
+  "loadError": {
+    "message": "Could not load settings. Reopen this popup to try again."
+  },
+  "settingsUnavailable": {
+    "message": "Settings unavailable"
+  },
+  "site_gmail": {
+    "message": "Gmail"
+  },
+  "site_youtube": {
+    "message": "YouTube"
+  },
+  "site_google": {
+    "message": "Google Search"
+  },
+  "site_x": {
+    "message": "X / Twitter"
+  }
+}

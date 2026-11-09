@@ -1,8 +1,10 @@
-/* 顶部导航栏左侧的 Logo */
-#logo, 
-ytd-topbar-logo-renderer,
-a#logo {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
+/* Keep layout and home-link hit targets intact. CSS also covers newly rendered nodes. */
+html[data-hide-logos-site="youtube"][data-hide-logos="true"] :is(
+  ytd-topbar-logo-renderer,
+  ytm-home-logo,
+  ytmusic-nav-bar a.ytmusic-logo,
+  #masthead a#logo,
+  #header a#logo
+) {
+  opacity: 0 !important;
 }

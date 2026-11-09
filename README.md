@@ -1,102 +1,96 @@
-# Hide Logos Extension: Per-Site Privacy & Distraction Control
+# Hide Logos
 
-> A lightweight Chrome Extension that gives users full control over hiding website logos and tab favicons on a per-site basis.
+A lightweight Manifest V3 extension that reduces conspicuous website branding while you browse. Hide page logos, tab icons and, optionally, tab titles independently for each website.
 
-![Manifest Version](https://img.shields.io/badge/Manifest-V3-blue)
-![Platform](https://img.shields.io/badge/Platform-Chrome%20%7C%20Edge%20%7C%20Brave-green)
-![Status](https://img.shields.io/badge/Status-Stable-success)
+Nothing is hidden by default. All production code is plain JavaScript and CSS: **no build step, server or runtime dependencies**.
 
-## 📖 Overview
+## Languages
 
-**Hide Logos** is a browser extension that lets you selectively hide website logos and browser tab favicons on any site you visit. Nothing is hidden by default — you decide which sites to clean up, either individually or via global defaults.
+The extension supports **English and Simplified Chinese** through Chrome's native `chrome.i18n` API. It follows the browser's interface language; unsupported languages fall back to English. This is independent of a website's language or preferred content languages. The interface keeps its existing controls without adding a language picker.
 
-Whether you're working in a public space, sharing your screen, or simply want a cleaner browsing experience, this extension provides granular, per-site control through a clean popup interface.
+Popup labels, status/error messages, the extension description and the neutral hidden title are localized (`Page` in English, `页面` in Simplified Chinese). Translations live in `_locales/en/messages.json` and `_locales/zh_CN/messages.json`. No translation library, additional permissions, background task or network fetch is required. New UI text needs an entry in each catalog; tests check coverage and placeholders.
 
-## ✨ Key Features
+## Install or update
 
-*   **🎯 Per-Site Control**: Independently toggle logo hiding and tab icon hiding for each website you visit.
-*   **🌐 Global Defaults**: Set baseline preferences that apply to all sites without custom overrides.
-*   **🔕 Off by Default**: No sites are affected until you explicitly enable hiding — zero surprises.
-*   **🚫 Generic Logo Detection**: Works on any website using common logo selector patterns, not just predefined sites.
-*   **⚡ Real-Time Updates**: Changes apply instantly without requiring a page reload.
-*   **🔒 Privacy-First Design**: Operates entirely locally. No external data transmission.
-*   **💾 Persistent Settings**: User preferences are synced via the Chrome Storage API.
+1. Clone this repository.
+2. Open `chrome://extensions` (or `edge://extensions`) and enable **Developer mode**.
+3. Choose **Load unpacked** and select this repository's root directory.
+4. When updating an existing installation, click its **Reload** button and refresh existing website tabs.
 
-## 🛠 Supported Platforms
+Chrome/Chromium 109 or later is required. Development dependencies are only needed to run tests.
 
-The extension includes **optimized CSS rules** for the following sites:
+## Use
 
-*   **YouTube** — Hides topbar logo
-*   **Google Search** — Hides doodles and main logo
-*   **X (formerly Twitter)** — Hides home X/bird logo
-*   **Gmail** — Hides header logo
+Open the popup on a website and choose **Hide logo & tab icon**, or change individual switches:
 
-Additionally, a **generic ruleset** targets common logo patterns (`[class*="logo"]`, `header a > img`, etc.) so logo hiding works on **any website**.
+| Control | Effect |
+| --- | --- |
+| Page branding | Conceals the site's matching logos, including text inside those logo elements. Layout and link hit targets are retained. |
+| Tab icon | Replaces declared tab favicons with a transparent image. Handles icons added or changed by the site. |
+| Tab title | Replaces the title with `Page` / `页面`, following the interface language. Off by default; independent of logo and icon settings. |
+| Generic logo rules | Optional header/navigation rules for recognizable logo tokens. Requires Page branding. |
 
-## 🚀 Installation (Developer Mode)
+Switching an option off restores the site's latest icon/title, including updates made while hidden. If an icon or title was created only by the extension, it is removed again.
 
-Since this extension is not yet hosted on the Chrome Web Store, you can install it manually:
+The popup labels each setting as **Global default** or **This website**. **Use global defaults for this website** clears all of that site's overrides. Global defaults live under **More settings**. Changes propagate to other open tabs through storage events, even when the popup is closed.
 
-1.  **Clone or Download** this repository.
-    ```bash
-    git clone https://github.com/touka2014/hide-logos-extension.git
-    ```
-2.  Open your browser and navigate to the Extensions management page:
-    *   Chrome: `chrome://extensions/`
-    *   Edge: `edge://extensions/`
-3.  Enable **Developer mode** (toggle in the top-right corner).
-4.  Click **Load unpacked**.
-5.  Select the cloned/downloaded directory.
+The status confirms that the content script applied the settings, not that every possible brand mark on a website was detected. Browser-protected pages and tabs needing a refresh are reported as unavailable; global controls remain usable.
 
-## 📖 Usage
+## Site coverage
 
-1.  Navigate to any website.
-2.  Click the extension icon in the browser toolbar. The popup shows the current site's hostname.
-3.  Toggle the **per-site** switches:
-    *   **Hide Page Logo** — Hides logos on the current site.
-    *   **Hide Tab Icon** — Replaces the current site's favicon with a transparent pixel.
-4.  Optionally configure **Global Defaults** to set the baseline behavior for all sites.
-5.  Use **Reset to Default** to remove per-site overrides and fall back to the global settings.
+| Adapter | Domain scope | Targeted elements |
+| --- | --- | --- |
+| YouTube | `youtube.com` and subdomains | Desktop masthead, mobile home logo and Music navigation logo |
+| Google Search | `google.com`, `www.google.com`, `encrypted.google.com` | Main/search header logo and known Doodle containers |
+| Gmail | `mail.google.com` and subdomains | Gmail header logo; does not inherit Search rules |
+| X / Twitter | `x.com`, `twitter.com` and subdomains | Branded home link and known startup logo elements |
 
-> **Note:** Per-site settings always take priority over global defaults.
+Other websites can use tab icon/title controls and opt into generic logo rules. Generic rules are off by default, including on supported sites. They use whole logo tokens in headers/navigation; they do not hide every navigation image/SVG or accidentally match `logout`.
 
-## 📂 Project Structure
+Settings use exact hostnames after removing a leading `www.` and trailing dot. For example, `m.youtube.com` has its own preferences even though it shares the YouTube adapter. Google regional domains and other Google products are not implicitly treated as Search.
+
+## How it works
 
 ```text
-.
-├── manifest.json       # Manifest V3 configuration
-├── content.js          # Core logic (CSS injection, favicon replacement, MutationObserver)
-├── popup.html          # Extension popup UI (per-site + global controls)
-├── popup.js            # Popup logic and per-site state management
-├── popup.css           # Popup styles
-├── styles/             # CSS rules for hiding logos
-│   ├── youtube.css     # YouTube-specific rules
-│   ├── google.css      # Google Search-specific rules
-│   ├── gmail.css       # Gmail-specific rules
-│   ├── x.css           # X/Twitter-specific rules
-│   └── generic.css     # Generic rules for any website
-├── icons/              # Extension icons
-├── LICENSE             # MIT License
-└── README.md           # Documentation
+shared/sites.js        Domain normalization and adapter selection
+shared/settings.js     Defaults, overrides, legacy compatibility and storage events
+controllers/favicon.js Reversible favicon masking
+controllers/title.js   Reversible title masking
+content.js             Page lifecycle, settings application and status messages
+styles/                Declarative CSS, gated by the page's current settings
+popup.html/js/css       Settings UI and confirmed application status
 ```
 
-## 🔧 Technical Details
+CSS is injected by the browser at `document_start`; settings toggle attributes on the document root. There is no asynchronous CSS fetch. New matching DOM elements are automatically styled, including after SPA navigation. A small structure observer handles late/replaced document roots and heads. Metadata observation is scoped to `<head>` and disconnected when both icon and title masking are off; extension-authored changes do not feed back into the observer.
 
-*   **Manifest V3**: Fully compliant with the latest Chrome Extension specification.
-*   **Per-Site Storage**: Site-specific preferences are stored under `siteSettings[hostname]` in `chrome.storage.sync`.
-*   **Performance**: Logos are hidden via CSS injection rather than JavaScript polling. `MutationObserver` is scoped to `<head>` for favicon replacement only.
-*   **Error Handling**: Promise-based message passing with graceful connection error handling.
+Settings still load asynchronously, so this reduces startup delay but **does not guarantee zero first-frame exposure**. Site changes, embedded frames, shadow roots, browser-managed tab UI and branding outside the listed selectors may need additional support. The extension does not alter the address bar, page content or browsing history.
 
-## 🤝 Contributing
+## Existing settings and storage
 
-Contributions are welcome! If you find a bug or want to add support for a new website:
+Version 2 global keys (`hideLogos`, `maskTab`) and `siteSettings[hostname]` overrides remain readable. New features default to off. Version 3 stores each edited per-site field in its own `hideLogos.v3.site.<hostname>.<field>` key so unrelated writes from different tabs do not overwrite one another. A `null` field explicitly inherits its global default and supersedes any legacy value. Reset writes all four null fields together. Legacy data is retained; migration is lazy and non-destructive.
 
-1.  Fork the repository.
-2.  Create a feature branch (`git checkout -b feature/AmazingFeature`).
-3.  Commit your changes (`git commit -m 'feat: Add support for Facebook'`).
-4.  Push to the branch (`git push origin feature/AmazingFeature`).
-5.  Open a Pull Request.
+Preferences use `chrome.storage.sync`, so they may sync with your browser account. There are no analytics, external rule downloads or extension-owned network requests. No extra permissions were added: only `storage` and `activeTab` are requested, with content scripts on HTTP(S) pages. Styles no longer need to be web-accessible resources.
 
-## 📄 License
+Sync storage has quotas (including 512 items and 8 KB per item), so this format is intended for a modest number of customized sites. Save failures are shown in the popup and roll back the displayed switch state. See the [Chrome storage documentation](https://developer.chrome.com/docs/extensions/reference/api/storage).
 
-Distributed under the MIT License. See `LICENSE` for more information.
+## Development and tests
+
+Use Node.js 22.22.2+, 24.15+ or 26+ (the versions supported by the test dependencies).
+
+```bash
+npm ci
+npm test
+npx playwright install chromium
+npm run test:browser
+```
+
+- Unit/integration tests cover legacy settings, concurrent writes, restoration, early/replaced heads, stale reads, fast toggles, metadata changes, error handling and popup state.
+- Browser tests load the actual unpacked extension into an isolated Chromium profile. Local fixtures served at the supported origins test real CSS, strict CSP, storage events, multiple tabs, SPA changes, reloads and popup interaction.
+- Popup screenshots are written to `artifacts/` in light and dark themes. Browser fixtures do not replace checking current live websites, especially authenticated Gmail and X views.
+- Both language catalogs are also tested through Chrome's native API in temporary single-locale copies. This verifies translated UI, placeholders, manifest metadata and title restoration without changing the developer's browser/OS language. macOS does not select native extension catalogs via Playwright's emulated page locale.
+
+To add a site, register its domain in `shared/sites.js`, add a stylesheet gated by `html[data-hide-logos-site="your-id"][data-hide-logos="true"]`, include it in `manifest.json`, and add a browser fixture that checks both hidden branding and unaffected navigation. Prefer stable, specific selectors and preserve page layout.
+
+## License
+
+[MIT](LICENSE)

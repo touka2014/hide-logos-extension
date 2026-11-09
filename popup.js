@@ -1,163 +1,129 @@
-/**
- * popup.js - V5.0 Per-Site Control
- */
+(() => {
+  'use strict';
+  const { normalizeHostname, matchSite, createSettingsStore } = globalThis.HideLogos;
+  const store = createSettingsStore(chrome.storage);
+  const $ = id => document.getElementById(id);
+  const t = (key, substitutions) => chrome.i18n.getMessage(key, substitutions);
+  document.documentElement.lang = t('languageCode');
+  for (const element of document.querySelectorAll('[data-i18n]')) {
+    element.textContent = t(element.dataset.i18n);
+  }
+  $('titleNote').textContent = t('titleNote', t('maskedTitle'));
+  const siteInputs = [...document.querySelectorAll('[data-site-field]')];
+  const globalInputs = [...document.querySelectorAll('[data-global-field]')];
+  let tab = null;
+  let hostname = '';
+  let snapshot = null;
+  let pageAvailable = false;
+  let busy = false;
+  let viewRevision = 0;
 
-let currentHostname = null;
+  function setStatus(text, state = '') {
+    $('pageStatus').textContent = text;
+    $('pageStatus').dataset.state = state;
+  }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const siteLogoSwitch = document.getElementById('siteLogoSwitch');
-  const siteTabSwitch = document.getElementById('siteTabSwitch');
-  const globalLogoSwitch = document.getElementById('toggleSwitchLogo');
-  const globalTabSwitch = document.getElementById('toggleSwitchTab');
-  const resetBtn = document.getElementById('resetSiteBtn');
-  const siteNameEl = document.getElementById('currentSite');
+  function setError(message = '') {
+    $('errorMessage').textContent = message;
+    $('errorMessage').hidden = !message;
+  }
 
-  // Get current tab hostname
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs.length === 0 || !tabs[0].url || !tabs[0].url.startsWith('http')) {
-      siteNameEl.textContent = 'N/A (non-web page)';
-      siteLogoSwitch.disabled = true;
-      siteTabSwitch.disabled = true;
-      resetBtn.classList.add('hidden');
-      loadGlobalSettings();
-      return;
+  function render() {
+    if (!snapshot) return;
+    for (const input of siteInputs) {
+      const field = input.dataset.siteField;
+      if (!busy) input.checked = snapshot.effective[field];
+      document.querySelector(`[data-source="${field}"]`).textContent =
+        t(snapshot.overrides[field] === null ? 'sourceGlobal' : 'sourceWebsite');
     }
-
-    try {
-      currentHostname = new URL(tabs[0].url).hostname.replace(/^www\./, '');
-    } catch {
-      currentHostname = null;
+    for (const input of globalInputs) {
+      if (!busy) input.checked = snapshot.defaults[input.dataset.globalField];
     }
+    $('siteControls').disabled = busy || !pageAvailable;
+    $('genericControls').disabled = busy || !pageAvailable;
+    $('globalControls').disabled = busy;
+    $('quickHide').disabled = busy || !pageAvailable;
+    $('resetSite').disabled = busy || !pageAvailable || Object.values(snapshot.overrides).every(value => value === null);
+  }
 
-    if (currentHostname) {
-      siteNameEl.textContent = currentHostname;
+  async function reload() {
+    const current = ++viewRevision;
+    const next = await store.read(hostname);
+    let status = null;
+    if (hostname) {
+      try {
+        status = await chrome.tabs.sendMessage(tab.id, { type: 'HIDE_LOGOS_GET_STATUS' });
+      } catch { /* Existing tabs after extension installation may need a refresh. */ }
+    }
+    if (current !== viewRevision) return;
+    snapshot = next;
+    pageAvailable = !!(status?.ready && !status.error && status.hostname === hostname);
+    if (!hostname) {
+      setStatus(t('openWebsite'));
+    } else if (!pageAvailable) {
+      setStatus(t('pageUnavailable'), 'unavailable');
+    } else if (next.effective.hideLogo && !matchSite(hostname) && !next.effective.genericRules) {
+      setStatus(t('noLogoRules'), 'unavailable');
     } else {
-      siteNameEl.textContent = 'N/A';
-      siteLogoSwitch.disabled = true;
-      siteTabSwitch.disabled = true;
+      const count = Object.values(status.applied).filter(Boolean).length;
+      setStatus(count ? t(count === 1 ? 'appliedOne' : 'appliedMany', String(count)) : t('nothingHidden'), count ? 'applied' : '');
     }
-
-    loadAllSettings();
-  });
-
-  function loadGlobalSettings() {
-    chrome.storage.sync.get(['hideLogos', 'maskTab'], (result) => {
-      globalLogoSwitch.checked = result.hideLogos === true;
-      globalTabSwitch.checked = result.maskTab === true;
-    });
+    render();
   }
 
-  function loadAllSettings() {
-    chrome.storage.sync.get(['hideLogos', 'maskTab', 'siteSettings'], (result) => {
-      const globalHideLogo = result.hideLogos === true;
-      const globalHideTab = result.maskTab === true;
-      globalLogoSwitch.checked = globalHideLogo;
-      globalTabSwitch.checked = globalHideTab;
-
-      const siteSettings = result.siteSettings || {};
-      const site = currentHostname ? siteSettings[currentHostname] : null;
-
-      if (site && site.hideLogo !== undefined) {
-        siteLogoSwitch.checked = site.hideLogo;
-      } else {
-        siteLogoSwitch.checked = globalHideLogo;
-      }
-
-      if (site && site.hideTabIcon !== undefined) {
-        siteTabSwitch.checked = site.hideTabIcon;
-      } else {
-        siteTabSwitch.checked = globalHideTab;
-      }
-
-      updateResetBtnVisibility(site);
-    });
-  }
-
-  function updateResetBtnVisibility(site) {
-    if (site && (site.hideLogo !== undefined || site.hideTabIcon !== undefined)) {
-      resetBtn.classList.remove('hidden');
-    } else {
-      resetBtn.classList.add('hidden');
-    }
-  }
-
-  // Per-site: Hide Logo
-  siteLogoSwitch.addEventListener('change', () => {
-    if (!currentHostname) return;
-    saveSiteSetting('hideLogo', siteLogoSwitch.checked);
-  });
-
-  // Per-site: Hide Tab Icon
-  siteTabSwitch.addEventListener('change', () => {
-    if (!currentHostname) return;
-    saveSiteSetting('hideTabIcon', siteTabSwitch.checked);
-  });
-
-  // Global: Hide Logos
-  globalLogoSwitch.addEventListener('change', () => {
-    chrome.storage.sync.set({ hideLogos: globalLogoSwitch.checked });
-    // Update site toggle to reflect new default if no per-site override
-    chrome.storage.sync.get(['siteSettings'], (result) => {
-      const site = (result.siteSettings || {})[currentHostname];
-      if (!site || site.hideLogo === undefined) {
-        siteLogoSwitch.checked = globalLogoSwitch.checked;
-      }
-    });
-    notifyContentScript({ type: 'UPDATE_SETTINGS' });
-  });
-
-  // Global: Hide Tab Icons
-  globalTabSwitch.addEventListener('change', () => {
-    chrome.storage.sync.set({ maskTab: globalTabSwitch.checked });
-    chrome.storage.sync.get(['siteSettings'], (result) => {
-      const site = (result.siteSettings || {})[currentHostname];
-      if (!site || site.hideTabIcon === undefined) {
-        siteTabSwitch.checked = globalTabSwitch.checked;
-      }
-    });
-    notifyContentScript({ type: 'UPDATE_SETTINGS' });
-  });
-
-  // Reset per-site settings
-  resetBtn.addEventListener('click', () => {
-    if (!currentHostname) return;
-    chrome.storage.sync.get(['siteSettings', 'hideLogos', 'maskTab'], (result) => {
-      const siteSettings = result.siteSettings || {};
-      delete siteSettings[currentHostname];
-      chrome.storage.sync.set({ siteSettings });
-
-      // Revert toggles to global defaults
-      siteLogoSwitch.checked = result.hideLogos === true;
-      siteTabSwitch.checked = result.maskTab === true;
-      resetBtn.classList.add('hidden');
-      notifyContentScript({ type: 'UPDATE_SETTINGS' });
-    });
-  });
-
-  function saveSiteSetting(key, value) {
-    chrome.storage.sync.get(['siteSettings'], (result) => {
-      const siteSettings = result.siteSettings || {};
-      if (!siteSettings[currentHostname]) {
-        siteSettings[currentHostname] = {};
-      }
-      siteSettings[currentHostname][key] = value;
-      chrome.storage.sync.set({ siteSettings });
-      updateResetBtnVisibility(siteSettings[currentHostname]);
-      notifyContentScript({ type: 'UPDATE_SETTINGS' });
-    });
-  }
-});
-
-function notifyContentScript(message) {
-  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-    if (tabs.length === 0) return;
-    const currentTab = tabs[0];
-    if (!currentTab.url || !currentTab.url.startsWith('http')) return;
-
+  async function save(operation) {
+    if (busy) return;
+    busy = true;
+    setError();
+    render();
     try {
-      await chrome.tabs.sendMessage(currentTab.id, message);
-    } catch {
-      // Content script not ready — silent fail
+      await operation();
+      await reload();
+    } catch (error) {
+      setError(t('saveError'));
+      console.warn('[Hide Logos]', error);
+      try { await reload(); } catch { /* Keep the last confirmed state. */ }
+    } finally {
+      busy = false;
+      render();
     }
+  }
+
+  for (const input of siteInputs) {
+    input.addEventListener('change', () => {
+      const value = input.checked;
+      save(() => store.setSite(hostname, { [input.dataset.siteField]: value }));
+    });
+  }
+  for (const input of globalInputs) {
+    input.addEventListener('change', () => {
+      const value = input.checked;
+      save(() => store.setDefault(input.dataset.globalField, value));
+    });
+  }
+  $('resetSite').addEventListener('click', () => save(() => store.resetSite(hostname)));
+  $('quickHide').addEventListener('click', () => save(() => store.setSite(hostname, { hideLogo: true, hideTabIcon: true })));
+
+  store.subscribe(() => reload().catch(() => setError(t('reloadError'))));
+
+  async function initialize() {
+    [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    try {
+      const url = new URL(tab?.url);
+      if (url.protocol === 'http:' || url.protocol === 'https:') hostname = normalizeHostname(url.hostname);
+    } catch { /* Browser pages and tabs without a URL have global controls only. */ }
+    const site = matchSite(hostname);
+    $('currentSite').textContent = hostname || t('noWebsite');
+    $('supportNote').textContent = hostname
+      ? (site ? t('siteSupported', t(`site_${site.id}`)) : t('siteUnsupported'))
+      : t('globalAvailable');
+    if (hostname && !site) $('advanced').open = true;
+    await reload();
+  }
+
+  initialize().catch(error => {
+    setError(t('loadError'));
+    setStatus(t('settingsUnavailable'), 'unavailable');
+    console.warn('[Hide Logos]', error);
   });
-}
+})();

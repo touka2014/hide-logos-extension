@@ -13,3 +13,8 @@ node_modules/
 *.crx
 *.pem
 *.zip
+
+# Test output
+artifacts/
+test-results/
+playwright-report/

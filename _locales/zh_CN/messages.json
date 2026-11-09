@@ -1,0 +1,148 @@
+{
+  "appName": {
+    "message": "Hide Logos"
+  },
+  "appDescription": {
+    "message": "按网站隐藏页面品牌标识、标签页图标和标题，随时开启或恢复。"
+  },
+  "languageCode": {
+    "message": "zh-CN"
+  },
+  "tagline": {
+    "message": "隐藏显眼标识，浏览更低调。"
+  },
+  "currentWebsite": {
+    "message": "当前网站"
+  },
+  "loading": {
+    "message": "正在加载…"
+  },
+  "checkingPage": {
+    "message": "正在检查当前页面…"
+  },
+  "quickHide": {
+    "message": "隐藏 Logo 和标签页图标"
+  },
+  "siteControlsLabel": {
+    "message": "当前网站的隐藏设置"
+  },
+  "pageBranding": {
+    "message": "页面品牌标识"
+  },
+  "tabIcon": {
+    "message": "标签页图标"
+  },
+  "tabTitle": {
+    "message": "标签页标题"
+  },
+  "maskedTitle": {
+    "message": "页面"
+  },
+  "titleNote": {
+    "message": "隐藏后，标签页标题显示为“$TITLE$”。",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      }
+    }
+  },
+  "resetSite": {
+    "message": "此网站恢复使用全局默认设置"
+  },
+  "moreSettings": {
+    "message": "更多设置"
+  },
+  "genericControlsLabel": {
+    "message": "当前网站的补充规则"
+  },
+  "genericRules": {
+    "message": "通用 Logo 规则"
+  },
+  "genericNote": {
+    "message": "匹配页眉中的常见 Logo。需开启“页面品牌标识”，可能隐藏其他符合规则的图片。"
+  },
+  "globalDefaults": {
+    "message": "全局默认设置"
+  },
+  "globalNote": {
+    "message": "适用于未单独设置的网站。"
+  },
+  "footerNote": {
+    "message": "设置会同步到已打开的标签页。"
+  },
+  "sourceGlobal": {
+    "message": "跟随全局默认"
+  },
+  "sourceWebsite": {
+    "message": "此网站单独设置"
+  },
+  "openWebsite": {
+    "message": "打开网站后，即可设置此网站的隐藏选项。"
+  },
+  "pageUnavailable": {
+    "message": "尚未应用，请刷新网页后重试；浏览器保护页面不支持此功能。"
+  },
+  "noLogoRules": {
+    "message": "此网站暂无专用 Logo 规则，可在下方开启通用规则。"
+  },
+  "appliedOne": {
+    "message": "已应用到此页面 · $COUNT$ 项",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "appliedMany": {
+    "message": "已应用到此页面 · $COUNT$ 项",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "nothingHidden": {
+    "message": "此页面尚未隐藏任何标识"
+  },
+  "saveError": {
+    "message": "设置保存失败，请重试。"
+  },
+  "reloadError": {
+    "message": "无法刷新设置，请重新打开扩展弹窗。"
+  },
+  "noWebsite": {
+    "message": "尚未选择网站"
+  },
+  "siteSupported": {
+    "message": "$SITE$ · 已适配专用 Logo 规则",
+    "placeholders": {
+      "site": {
+        "content": "$1"
+      }
+    }
+  },
+  "siteUnsupported": {
+    "message": "支持隐藏标签页信息 · 可选通用 Logo 规则"
+  },
+  "globalAvailable": {
+    "message": "仍可调整全局默认设置。"
+  },
+  "loadError": {
+    "message": "无法加载设置，请重新打开扩展弹窗。"
+  },
+  "settingsUnavailable": {
+    "message": "设置暂不可用"
+  },
+  "site_gmail": {
+    "message": "Gmail"
+  },
+  "site_youtube": {
+    "message": "YouTube"
+  },
+  "site_google": {
+    "message": "Google 搜索"
+  },
+  "site_x": {
+    "message": "X / Twitter"
+  }
+}

@@ -2,58 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="appName"></title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <h3>Hide Logos</h3>
+  <header class="app-header">
+    <img src="icons/icon48.png" alt="" width="32" height="32">
+    <div><h1 data-i18n="appName"></h1><p data-i18n="tagline"></p></div>
+  </header>
 
-  <!-- Current Site Section -->
-  <div class="section-label" id="siteHeader">Current Site</div>
-  <div class="site-name" id="currentSite">—</div>
+  <main>
+    <section class="site-card" aria-labelledby="currentSite">
+      <div class="eyebrow" data-i18n="currentWebsite"></div>
+      <h2 id="currentSite" data-i18n="loading"></h2>
+      <p id="supportNote" class="muted"></p>
+      <div id="pageStatus" class="status" role="status" aria-live="polite" data-i18n="checkingPage"></div>
+      <button id="quickHide" class="primary" data-i18n="quickHide" disabled></button>
+    </section>
 
-  <div class="setting-item">
-    <span class="label">Hide Page Logo</span>
-    <label class="switch">
-      <input type="checkbox" id="siteLogoSwitch">
-      <span class="slider"></span>
-    </label>
-  </div>
+    <fieldset id="siteControls" disabled>
+      <legend class="sr-only" data-i18n="siteControlsLabel"></legend>
+      <label class="setting" for="siteLogo">
+        <span><span class="setting-name" data-i18n="pageBranding"></span><small data-source="hideLogo"></small></span>
+        <input id="siteLogo" type="checkbox" role="switch" data-site-field="hideLogo">
+      </label>
+      <label class="setting" for="siteIcon">
+        <span><span class="setting-name" data-i18n="tabIcon"></span><small data-source="hideTabIcon"></small></span>
+        <input id="siteIcon" type="checkbox" role="switch" data-site-field="hideTabIcon">
+      </label>
+      <label class="setting" for="siteTitle">
+        <span><span class="setting-name" data-i18n="tabTitle"></span><small data-source="hideTitle"></small></span>
+        <input id="siteTitle" type="checkbox" role="switch" data-site-field="hideTitle" aria-describedby="titleNote">
+      </label>
+      <p id="titleNote" class="hint"></p>
+      <button id="resetSite" class="text-button" data-i18n="resetSite" disabled></button>
+    </fieldset>
 
-  <div class="setting-item">
-    <span class="label">Hide Tab Icon</span>
-    <label class="switch">
-      <input type="checkbox" id="siteTabSwitch">
-      <span class="slider"></span>
-    </label>
-  </div>
-
-  <button id="resetSiteBtn" class="reset-btn">Reset to Default</button>
-
-  <div class="divider"></div>
-
-  <!-- Global Defaults -->
-  <div class="section-label">Global Defaults</div>
-
-  <div class="setting-item">
-    <span class="label">Hide All Logos</span>
-    <label class="switch">
-      <input type="checkbox" id="toggleSwitchLogo">
-      <span class="slider"></span>
-    </label>
-  </div>
-
-  <div class="setting-item">
-    <span class="label">Hide All Tab Icons</span>
-    <label class="switch">
-      <input type="checkbox" id="toggleSwitchTab">
-      <span class="slider"></span>
-    </label>
-  </div>
-
-  <div class="footer-note">
-    Per-site settings override global defaults
-  </div>
-
+    <details id="advanced">
+      <summary data-i18n="moreSettings"></summary>
+      <fieldset id="genericControls" disabled>
+        <legend class="sr-only" data-i18n="genericControlsLabel"></legend>
+        <label class="setting" for="siteGeneric">
+          <span><span class="setting-name" data-i18n="genericRules"></span><small data-source="genericRules"></small></span>
+          <input id="siteGeneric" type="checkbox" role="switch" data-site-field="genericRules" aria-describedby="genericNote">
+        </label>
+        <p id="genericNote" class="hint" data-i18n="genericNote"></p>
+      </fieldset>
+      <fieldset id="globalControls" disabled>
+        <legend data-i18n="globalDefaults"></legend>
+        <p class="hint" data-i18n="globalNote"></p>
+        <label class="setting" for="globalLogo"><span data-i18n="pageBranding"></span><input id="globalLogo" type="checkbox" role="switch" data-global-field="hideLogo"></label>
+        <label class="setting" for="globalIcon"><span data-i18n="tabIcon"></span><input id="globalIcon" type="checkbox" role="switch" data-global-field="hideTabIcon"></label>
+        <label class="setting" for="globalTitle"><span data-i18n="tabTitle"></span><input id="globalTitle" type="checkbox" role="switch" data-global-field="hideTitle"></label>
+        <label class="setting" for="globalGeneric"><span data-i18n="genericRules"></span><input id="globalGeneric" type="checkbox" role="switch" data-global-field="genericRules"></label>
+      </fieldset>
+    </details>
+    <p id="errorMessage" role="alert" hidden></p>
+  </main>
+  <footer data-i18n="footerNote"></footer>
+  <script src="shared/sites.js"></script>
+  <script src="shared/settings.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

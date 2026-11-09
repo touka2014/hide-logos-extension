@@ -1,6 +1,9 @@
-/* 顶部左上角 Gmail logo */
-.gb_Kd,
-a.gb_ve,
-img.gb_Mc {
-   visibility: hidden !important;
+html[data-hide-logos-site="gmail"][data-hide-logos="true"] :is(
+  img[alt="Gmail"],
+  a[aria-label="Gmail"] img,
+  a[aria-label="Gmail"] svg,
+  a.gb_ve img,
+  img.gb_Mc
+) {
+  opacity: 0 !important;
 }

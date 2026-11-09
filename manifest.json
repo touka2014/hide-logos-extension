@@ -1,36 +1,21 @@
 {
-    "manifest_version": 3,
-    "name": "Hide Logos",
-    "version": "2.0",
-    "description": "Hides logos from YouTube, Google, X, Gmail, etc.",
-    "permissions": [
-      "storage",
-      "activeTab"
-    ],
-    "action": {
-      "default_popup": "popup.html",
-      "default_icon": {
-        "16": "icons/icon16.png",
-        "48": "icons/icon48.png",
-        "128": "icons/icon128.png"
-      }
-    },
-    "content_scripts": [
-      {
-        "matches": ["<all_urls>"],
-        "js": ["content.js"],
-        "run_at": "document_start"
-      }
-    ],
-    "icons": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
-    },
-    "web_accessible_resources": [
-      {
-        "resources": ["styles/*.css"],
-        "matches": ["<all_urls>"]
-      }
-    ]
-  }
+  "manifest_version": 3,
+  "name": "__MSG_appName__",
+  "default_locale": "en",
+  "version": "3.0.0",
+  "minimum_chrome_version": "109",
+  "description": "__MSG_appDescription__",
+  "permissions": ["storage", "activeTab"],
+  "action": {
+    "default_title": "__MSG_appName__",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "content_scripts": [{
+    "matches": ["http://*/*", "https://*/*"],
+    "css": ["styles/youtube.css", "styles/google.css", "styles/gmail.css", "styles/x.css", "styles/generic.css"],
+    "js": ["shared/sites.js", "shared/settings.js", "controllers/favicon.js", "controllers/title.js", "content.js"],
+    "run_at": "document_start"
+  }],
+  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+}
