@@ -2,12 +2,12 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { makePage, read, settle } = require('./helpers.cjs');
 
-async function popup(t, { available = true, url = 'https://www.youtube.com/', locale = 'en' } = {}) {
+async function popup(t, { available = true, url = 'https://www.youtube.com/', locale = 'en', applied = {} } = {}) {
   const page = makePage({ html: read('popup.html'), locale });
   t.after(() => page.window.close());
   page.window.chrome.tabs = {
     query: async () => [{ id: 1, url }],
-    sendMessage: async () => available ? { ready: true, hostname: 'youtube.com', applied: { hideLogo: false, hideTabIcon: false, hideTitle: false } } : undefined
+    sendMessage: async () => available ? { ready: true, hostname: page.api.normalizeHostname(new URL(url).hostname), applied } : undefined
   };
   page.window.eval(read('popup.js'));
   await settle();
@@ -42,6 +42,18 @@ test('browser pages allow global settings but disable website controls', async t
   assert.equal(page.document.getElementById('siteControls').disabled, true);
   assert.equal(page.document.getElementById('globalControls').disabled, false);
   assert.equal(page.document.getElementById('currentSite').textContent, 'No website selected');
+});
+
+test('missing logo rules still report which tab options applied', async t => {
+  const page = await popup(t, {
+    url: 'https://unknown.test/', locale: 'zh-CN', applied: { hideTabIcon: true }
+  });
+  await page.storage.sync.set({ hideLogos: true, maskTab: true });
+  await settle();
+  const status = page.document.getElementById('pageStatus').textContent;
+  assert.match(status, /已隐藏标签页图标/);
+  assert.match(status, /暂无专用 Logo 规则/);
+  assert.doesNotMatch(status, /标签页标题/);
 });
 
 test('Chinese popup translates static labels, dynamic status and save errors', async t => {

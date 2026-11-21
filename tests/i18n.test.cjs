@@ -8,7 +8,9 @@ test('both catalogs cover every static, dynamic and manifest message with matchi
   assert.deepEqual(Object.keys(chinese).sort(), Object.keys(english).sort());
   const page = makePage({ html: read('popup.html') }); t.after(() => page.window.close());
   const keys = [...page.document.querySelectorAll('[data-i18n]')].map(element => element.dataset.i18n);
-  for (const match of read('popup.js').matchAll(/\bt\('([^']+)'/g)) keys.push(match[1]);
+  for (const file of ['popup.js', 'controllers/picker.js']) {
+    for (const match of read(file).matchAll(/\bt\('([^']+)'/g)) keys.push(match[1]);
+  }
   for (const match of read('manifest.json').matchAll(/__MSG_(\w+)__/g)) keys.push(match[1]);
   keys.push('sourceGlobal', 'sourceWebsite', 'appliedOne', 'appliedMany', 'maskedTitle');
   keys.push(...page.api.sites.map(site => `site_${site.id}`));

@@ -23,6 +23,12 @@ test('Gmail wins over Google, and lookalike domains never match', t => {
   assert.equal(matchSite('drive.google.com'), null);
   assert.equal(matchSite('youtube.com.evil.test'), null);
   assert.equal(matchSite('notyoutube.com'), null);
+  for (const host of ['reddit.com', 'www.reddit.com', 'old.reddit.com', 'sh.reddit.com']) {
+    assert.equal(matchSite(host).id, 'reddit');
+  }
+  for (const host of ['reddit.com.example.test', 'notreddit.com', 'ads.reddit.com']) {
+    assert.equal(matchSite(host), null);
+  }
 });
 
 test('parallel writes preserve unrelated fields and sites; resetting masks legacy overrides', async t => {
@@ -59,4 +65,21 @@ test('storage errors reach the caller and subscriptions can be removed', async t
   assert.equal(calls, 1);
   storage.sync.set = async () => { throw new Error('quota exceeded'); };
   await assert.rejects(store.setSite('x.com', { hideLogo: true }), /quota/);
+});
+
+test('concurrent logo picks persist separately and undo affects only the selected host and rule', async t => {
+  const page = makePage(); t.after(() => page.window.close());
+  const store = page.api.createSettingsStore(page.storage);
+  await Promise.all([
+    store.addPick('www.example.test', '#wordmark'),
+    store.addPick('example.test', '#icon'),
+    store.addPick('m.example.test', '#wordmark')
+  ]);
+  assert.deepEqual(plain((await store.read('example.test')).picks).sort(), ['#icon', '#wordmark']);
+  await store.addPick('example.test', '#icon');
+  await store.removePick('example.test', '#wordmark');
+  assert.deepEqual(plain((await store.read('example.test')).picks), ['#icon']);
+  assert.deepEqual(plain((await store.read('m.example.test')).picks), ['#wordmark']);
+  assert.equal((await store.read('example.test')).effective.hideLogo, false);
+  assert.equal((await store.read('example.test')).effective.hideTabIcon, false);
 });

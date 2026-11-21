@@ -41,6 +41,7 @@
     }
     $('siteControls').disabled = busy || !pageAvailable;
     $('genericControls').disabled = busy || !pageAvailable;
+    $('undoPick').hidden = !snapshot.picks.length;
     $('globalControls').disabled = busy;
     $('quickHide').disabled = busy || !pageAvailable;
     $('resetSite').disabled = busy || !pageAvailable || Object.values(snapshot.overrides).every(value => value === null);
@@ -62,8 +63,12 @@
       setStatus(t('openWebsite'));
     } else if (!pageAvailable) {
       setStatus(t('pageUnavailable'), 'unavailable');
-    } else if (next.effective.hideLogo && !matchSite(hostname) && !next.effective.genericRules) {
-      setStatus(t('noLogoRules'), 'unavailable');
+    } else if (next.effective.hideLogo && !matchSite(hostname) && !next.effective.genericRules && !next.picks.length) {
+      const appliedTabOptions = [];
+      if (status.applied.hideTabIcon) appliedTabOptions.push(t('tabIcon'));
+      if (status.applied.hideTitle) appliedTabOptions.push(t('tabTitle'));
+      const note = t('noLogoRules');
+      setStatus(appliedTabOptions.length ? t('partialLogoStatus', [appliedTabOptions.join(' + '), note]) : note, 'unavailable');
     } else {
       const count = Object.values(status.applied).filter(Boolean).length;
       setStatus(count ? t(count === 1 ? 'appliedOne' : 'appliedMany', String(count)) : t('nothingHidden'), count ? 'applied' : '');
@@ -103,6 +108,26 @@
   }
   $('resetSite').addEventListener('click', () => save(() => store.resetSite(hostname)));
   $('quickHide').addEventListener('click', () => save(() => store.setSite(hostname, { hideLogo: true, hideTabIcon: true })));
+  $('undoPick').addEventListener('click', () => {
+    const selector = snapshot?.picks[0];
+    if (selector) save(() => store.removePick(hostname, selector));
+  });
+  $('pickLogo').addEventListener('click', async () => {
+    if (busy || !pageAvailable) return;
+    busy = true;
+    render();
+    setError();
+    try {
+      const result = await chrome.tabs.sendMessage(tab.id, { type: 'HIDE_LOGOS_PICK', hostname });
+      if (result?.started) window.close();
+      else setError(t('pickUnavailable'));
+    } catch {
+      setError(t('pickUnavailable'));
+    } finally {
+      busy = false;
+      render();
+    }
+  });
 
   store.subscribe(() => reload().catch(() => setError(t('reloadError'))));
 

@@ -30,7 +30,12 @@
       overrides[field] = typeof value === 'boolean' ? value : null;
       effective[field] = overrides[field] ?? defaults[field];
     }
-    return { defaults, overrides, effective };
+    const pickPrefix = siteKey(host, 'pick:');
+    const picks = Object.keys(raw)
+      .filter(key => key.startsWith(pickPrefix) && Number.isFinite(raw[key]))
+      .sort((a, b) => raw[b] - raw[a] || a.localeCompare(b))
+      .map(key => key.slice(pickPrefix.length));
+    return { defaults, overrides, effective, picks };
   }
 
   function createSettingsStore(storage) {
@@ -57,6 +62,14 @@
         validateField(field);
         if (typeof value !== 'boolean') throw new Error('Invalid setting');
         await storage.sync.set({ [globalKeys[field]]: value });
+      },
+      async addPick(hostname, selector) {
+        if (!hostname || !selector) throw new Error('A website and logo are required');
+        // Each pick can be added or undone without touching other rules or switches.
+        await storage.sync.set({ [siteKey(hostname, 'pick:') + selector]: Date.now() });
+      },
+      async removePick(hostname, selector) {
+        await storage.sync.remove(siteKey(hostname, 'pick:') + selector);
       },
       async resetSite(hostname) {
         await this.setSite(hostname, Object.fromEntries(fields.map(field => [field, null])));

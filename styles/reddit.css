@@ -1,0 +1,15 @@
+html[data-hide-logos-site="reddit"][data-hide-logos="true"] :is(
+  #reddit-logo,
+  header a[aria-label="Go to Reddit Home" i],
+  header svg[style*="--shreddit-color-wordmark"],
+  shreddit-app > header svg[viewBox="0 0 216 216"]:has([id^="snoo-radial-"]),
+  #header-bottom-left #header-img,
+  #header-bottom-left #header-img-a,
+  /* Verification pages have also served a plain .header with an image home link. */
+  body > main > .logo > svg[viewBox="0 0 216 216"],
+  body > .header > a:is([href="https://www.reddit.com"], [href="https://www.reddit.com/"]) > img,
+  /* The network-block page pairs its Snoo illustration with this support form. */
+  body.theme-beta > div:has(a[href*="ticket_form_id=21879292693140"]) .overflow-hidden > img:only-child[src^="data:image/png;base64,"]
+) {
+  opacity: 0 !important;
+}

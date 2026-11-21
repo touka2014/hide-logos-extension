@@ -79,5 +79,11 @@ for (const [locale, lang, title, button, applied] of [
     await popup.locator('#resetSite').click();
     await expect(website).toHaveTitle('Google original');
     await expect(popup.locator('#pageStatus')).toHaveText(catalog.nothingHidden.message);
+    await expect(popup.locator('#pickLogo')).toHaveText(catalog.pickLogo.message);
+    await popup.locator('#pickLogo').click();
+    const picker = website.locator('[data-hide-logos-picker]');
+    await expect(picker.locator('[role="status"]')).toHaveText(catalog.pickHint.message);
+    await picker.getByRole('button', { name: catalog.pickCancel.message }).click();
+    await expect(picker).toHaveCount(0);
   });
 }

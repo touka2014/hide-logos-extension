@@ -6,7 +6,8 @@
     { id: 'gmail', domains: ['mail.google.com'] },
     { id: 'youtube', domains: ['youtube.com'] },
     { id: 'google', domains: ['google.com', 'encrypted.google.com'], exact: true },
-    { id: 'x', domains: ['x.com', 'twitter.com'] }
+    { id: 'x', domains: ['x.com', 'twitter.com'] },
+    { id: 'reddit', domains: ['reddit.com', 'old.reddit.com', 'sh.reddit.com'], exact: true }
   ];
 
   function normalizeHostname(hostname) {

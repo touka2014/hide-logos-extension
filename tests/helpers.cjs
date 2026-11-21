@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM } = require('jsdom');
 const root = path.resolve(__dirname, '..');
-const scripts = ['shared/sites.js', 'shared/settings.js', 'controllers/favicon.js', 'controllers/title.js'];
+const scripts = ['shared/sites.js', 'shared/settings.js', 'controllers/favicon.js', 'controllers/title.js', 'controllers/picker.js'];
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const settle = () => new Promise(resolve => setImmediate(resolve));
 
@@ -30,6 +30,12 @@ function makeStorage(initial = {}) {
   const storage = {
     sync: {
       async get() { return structuredClone(data); },
+      async remove(key) {
+        if (!Object.hasOwn(data, key)) return;
+        const changes = { [key]: { oldValue: data[key] } };
+        delete data[key];
+        for (const listener of listeners) listener(changes, 'sync');
+      },
       async set(values) {
         const changes = {};
         for (const [key, value] of Object.entries(values)) {

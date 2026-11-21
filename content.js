@@ -1,14 +1,16 @@
 (() => {
   'use strict';
 
-  const { normalizeHostname, matchSite, createSettingsStore, FaviconController, TitleController } = globalThis.HideLogos;
+  const { normalizeHostname, matchSite, createSettingsStore, FaviconController, TitleController, LogoPicker } = globalThis.HideLogos;
   const hostname = normalizeHostname(location.hostname);
   const site = matchSite(hostname);
   const store = createSettingsStore(chrome.storage);
   const favicon = new FaviconController(document);
   const title = new TitleController(document);
+  const picker = new LogoPicker(selector => store.addPick(hostname, selector));
   const attributes = ['data-hide-logos-site', 'data-hide-logos', 'data-hide-logos-generic'];
   let settings = null;
+  let picks = [];
   let error = null;
   let revision = 0;
   let latestRead = Promise.resolve();
@@ -48,6 +50,7 @@
       attributes.forEach((name, index) => {
         if (root.getAttribute(name) !== values[index]) root.setAttribute(name, values[index]);
       });
+      picker.apply(picks);
     }
     applyHead();
   }
@@ -60,7 +63,7 @@
       error,
       settings,
       applied: {
-        hideLogo: !!(settings?.hideLogo && (site || settings.genericRules)),
+        hideLogo: !!(picks.length || (settings?.hideLogo && (site || settings.genericRules))),
         hideTabIcon: !!(settings?.hideTabIcon && document.head),
         hideTitle: !!(settings?.hideTitle && document.head)
       }
@@ -72,6 +75,7 @@
     latestRead = store.read(hostname).then(result => {
       if (current !== revision) return;
       settings = result.effective;
+      picks = result.picks;
       error = null;
       apply();
     }).catch(cause => {
@@ -86,6 +90,12 @@
   structureObserver.observe(document, { childList: true });
   store.subscribe(refresh);
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message.type === 'HIDE_LOGOS_PICK') {
+      const started = message.hostname === hostname && !!document.body && getStatus().ready && !error;
+      if (started) picker.start();
+      sendResponse({ started });
+      return;
+    }
     if (message.type !== 'HIDE_LOGOS_GET_STATUS') return;
     refresh().then(sendResponse);
     return true;

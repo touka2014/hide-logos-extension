@@ -2,7 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { createHash } = require('node:crypto');
 const path = require('node:path');
-const { mkdirSync } = require('node:fs');
+const { mkdirSync, readFileSync } = require('node:fs');
 const { chromium, expect } = require('@playwright/test');
 const root = path.resolve(__dirname, '../..');
 // Chromium derives an unpacked extension ID from its absolute path (no manifest key needed).
@@ -46,7 +46,7 @@ test('unpacked extension in Chromium', { timeout: 120000 }, async t => {
     return page;
   };
 
-  await t.test('four dedicated adapters work with CSP and do not hide navigation', async () => {
+  await t.test('YouTube, Search, Gmail and X rules work with CSP and preserve navigation', async () => {
     await write({ hideLogos: true, maskTab: true, maskTitle: true });
     for (const hostname of ['www.youtube.com', 'www.google.com', 'mail.google.com', 'x.com']) {
       const page = await open(hostname);
@@ -65,6 +65,46 @@ test('unpacked extension in Chromium', { timeout: 120000 }, async t => {
       assert.deepEqual(iconDecoded, [1, 1]);
       await page.close();
     }
+  });
+
+  await t.test('Reddit rules hide and restore branding across layouts and preserve unrelated controls', async () => {
+    await clear();
+    const png = readFileSync(path.join(root, 'icons/icon16.png'), 'base64');
+    const layouts = {
+      'https://www.reddit.com/': '<header><a id="reddit-logo" data-brand href="/"><svg></svg>reddit</a><button data-keep>Menu</button></header>',
+      'https://sh.reddit.com/': '<header><a aria-label="Go to Reddit Home" data-brand href="/">reddit</a><button data-keep>Search</button></header>',
+      'https://old.reddit.com/': '<div id="header-bottom-left"><a id="header-img" class="default-header" data-brand href="/">reddit.com</a><span class="redditname" data-keep>Community</span></div>',
+      'https://old.reddit.com/login/': '<shreddit-app><header><div><span><svg viewBox="0 0 216 216" data-brand><defs><radialGradient id="snoo-radial-gradient-1"/></defs></svg></span><span><svg style="color:var(--shreddit-color-wordmark)" data-brand></svg></span></div><button data-keep>Log in</button></header></shreddit-app>',
+      'https://www.reddit.com/verify': '<main><div class="logo"><svg viewBox="0 0 216 216" data-brand></svg></div><form data-keep>Continue</form></main>',
+      'https://www.reddit.com/verify-header': '<div class="header"><a href="https://www.reddit.com"><img data-brand></a></div><div class="main"><form data-keep>Continue</form></div>',
+      'https://old.reddit.com/blocked': `<body class="theme-beta"><div><div class="overflow-hidden"><img data-brand src="data:image/png;base64,${png}"></div><a data-keep href="https://support.reddithelp.com/hc/en-us/requests/new?ticket_form_id=21879292693140">File a ticket</a></div>`
+    };
+    const page = await context.newPage();
+    await page.route(/^https:\/\/(www|sh|old)\.reddit\.com\//, route => route.fulfill({
+      contentType: 'text/html',
+      body: '<!doctype html>' + layouts[route.request().url()] + '<article data-keep><img class="logo" alt="Community logo"></article>'
+    }));
+    for (const url of Object.keys(layouts)) {
+      await page.goto(url);
+      const logos = await page.locator('[data-brand]').all();
+      assert.ok(logos.length > 0, url);
+      for (const logo of logos) await expect(logo).toHaveCSS('opacity', '1');
+      await write({ hideLogos: true });
+      for (const logo of logos) await expect(logo).toHaveCSS('opacity', '0');
+      for (const other of await page.locator('[data-keep], article img').all()) {
+        assert.ok(await other.evaluate(element => {
+          for (let node = element; node; node = node.parentElement) {
+            if (getComputedStyle(node).opacity === '0') return false;
+          }
+          return true;
+        }), url);
+      }
+      const homeLink = page.locator('a[data-brand]');
+      if (await homeLink.count()) await homeLink.click({ trial: true });
+      await write({ hideLogos: false });
+      for (const logo of logos) await expect(logo).toHaveCSS('opacity', '1');
+    }
+    await page.close();
   });
 
   await t.test('existing tabs update together, SPA metadata stays hidden, and turning off restores the latest values', async () => {
@@ -101,6 +141,89 @@ test('unpacked extension in Chromium', { timeout: 120000 }, async t => {
     await expect(page.locator('[data-logo]')).toHaveCSS('opacity', '0');
     for (const id of ['avatar', 'logout', 'navButton']) await expect(page.locator(`#${id}`)).toHaveCSS('opacity', '1');
     await page.close();
+  });
+
+  await t.test('popup picks, cancels, persists and undoes individual logos on one host under strict CSP', async () => {
+    await clear();
+    const page = await open('unknown.test');
+    const other = await open('www.google.com');
+    await page.bringToFront();
+    const tab = await control.evaluate(async () => (await chrome.tabs.query({ active: true, currentWindow: true }))[0]);
+    async function openPopup() {
+      const popup = await context.newPage();
+      await popup.addInitScript(tab => { chrome.tabs.query = async () => [tab]; }, { id: tab.id, url: page.url() });
+      await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+      await expect(popup.locator('#pickLogo')).toBeEnabled();
+      return popup;
+    }
+    const overlay = page.locator('[data-hide-logos-picker]');
+    async function startPick() {
+      const popup = await openPopup();
+      await popup.locator('#pickLogo').click();
+      await expect(overlay).toBeVisible();
+    }
+    async function select(locator) {
+      const box = await locator.boundingBox();
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+      await expect(overlay).toHaveCount(0);
+    }
+    const logo = page.locator('[data-logo]');
+    const second = page.locator('#logout');
+    await startPick();
+    await page.keyboard.press('Escape');
+    await expect(overlay).toHaveCount(0);
+    await expect(logo).toHaveCSS('opacity', '1');
+    await startPick();
+    await select(logo);
+    await expect(logo).toHaveCSS('opacity', '0');
+    await startPick();
+    await select(second);
+    await expect(second).toHaveCSS('opacity', '0');
+    assert.equal(page.url(), 'https://unknown.test/');
+    await expect(other.locator('#logout')).toHaveCSS('opacity', '1');
+
+    await page.reload();
+    await expect(logo).toHaveCSS('opacity', '0');
+    await expect(second).toHaveCSS('opacity', '0');
+    await page.evaluate(() => { const el = document.querySelector('#logout'); el.replaceWith(el.cloneNode(true)); });
+    await expect(second).toHaveCSS('opacity', '0');
+    const revisit = await open('unknown.test');
+    await expect(revisit.locator('#logout')).toHaveCSS('opacity', '0');
+    const popup = await openPopup();
+    await expect(popup.locator('#siteLogo')).not.toBeChecked();
+    await popup.locator('#siteLogo').check();
+    await popup.locator('#siteLogo').uncheck();
+    await expect(logo).toHaveCSS('opacity', '0');
+    await popup.locator('#undoPick').click();
+    await expect(second).toHaveCSS('opacity', '1');
+    await expect(revisit.locator('#logout')).toHaveCSS('opacity', '1');
+    await expect(logo).toHaveCSS('opacity', '0');
+    await popup.locator('#undoPick').click();
+    await expect(logo).toHaveCSS('opacity', '1');
+    await expect(popup.locator('#undoPick')).toBeHidden();
+    await page.reload();
+    await expect(logo).toHaveCSS('opacity', '1');
+
+    // Pick a path inside an anonymous SVG. Anchor the whole SVG to its home
+    // link, leave the adjacent icon alone, and retry a failed save in place.
+    await page.locator('header').evaluate(header => header.insertAdjacentHTML('afterbegin',
+      '<a href="/"><svg width="40" height="24"><rect width="40" height="24"/></svg></a>' +
+      '<a href="/search"><svg width="20" height="20"></svg></a>'));
+    await clear();
+    const filler = Object.fromEntries(Array.from({ length: 512 }, (_, i) => ['filler' + i, 1]));
+    await write(filler);
+    await startPick();
+    const rect = page.locator('a[href="/"] rect');
+    const point = await rect.boundingBox();
+    await page.mouse.click(point.x + 3, point.y + 3);
+    const failed = await control.evaluate(() => chrome.i18n.getMessage('pickSaveError'));
+    await expect(overlay.locator('[role="status"]')).toHaveText(failed);
+    await expect(page.locator('a[href="/"] svg')).toHaveCSS('opacity', '1');
+    await clear();
+    await select(rect);
+    await expect(page.locator('a[href="/"] svg')).toHaveCSS('opacity', '0');
+    await expect(page.locator('a[href="/search"] svg')).toHaveCSS('opacity', '1');
+    await popup.close(); await revisit.close(); await other.close(); await page.close();
   });
 
   await t.test('legacy preferences survive reloads and per-site reset resumes global defaults', async () => {

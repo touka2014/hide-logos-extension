@@ -1,0 +1,46 @@
+[data-hide-logos-picker] {
+  all: initial !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483647 !important;
+  display: block !important;
+  cursor: crosshair !important;
+  pointer-events: auto !important;
+  user-select: none !important;
+}
+[data-hide-logos-picker] > .pick-frame {
+  position: fixed;
+  pointer-events: none;
+  box-sizing: border-box;
+  outline: 2px solid #275dce;
+  background: rgb(39 93 206 / 15%);
+}
+[data-hide-logos-picker] > .pick-frame[hidden] { display: none !important; }
+[data-hide-logos-picker] > .pick-bar {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  box-sizing: border-box;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #202733;
+  color: white;
+  font: 14px/1.4 system-ui, sans-serif;
+  cursor: default;
+  box-shadow: 0 2px 10px #0004;
+}
+[data-hide-logos-picker] > .pick-bar button {
+  font: inherit;
+  color: white;
+  background: transparent;
+  border: 1px solid #aaa;
+  border-radius: 5px;
+  padding: 3px 8px;
+  cursor: pointer;
+}

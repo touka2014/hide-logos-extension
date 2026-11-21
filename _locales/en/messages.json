@@ -27,7 +27,7 @@
     "message": "Settings for the current website"
   },
   "pageBranding": {
-    "message": "Page branding"
+    "message": "Preset page logos"
   },
   "tabIcon": {
     "message": "Tab icon"
@@ -52,6 +52,13 @@
   "moreSettings": {
     "message": "More settings"
   },
+  "pickLogo": { "message": "Pick a logo to hide" },
+  "undoPick": { "message": "Undo last pick" },
+  "pickHint": { "message": "Click the logo to hide it on this website. Esc cancels." },
+  "pickCancel": { "message": "Cancel" },
+  "pickDifferent": { "message": "Move over the logo itself, then click its outline." },
+  "pickSaveError": { "message": "Couldn’t save this logo. Click it to retry or cancel." },
+  "pickUnavailable": { "message": "Refresh the website, then try picking a logo again." },
   "genericControlsLabel": {
     "message": "Additional rules for this website"
   },
@@ -59,7 +66,7 @@
     "message": "Generic logo rules"
   },
   "genericNote": {
-    "message": "Use common logo patterns in headers. Requires Page branding; may hide other matching images."
+    "message": "Matches common logo patterns in headers when Preset page logos is on. May hide other matching images."
   },
   "globalDefaults": {
     "message": "GLOBAL DEFAULTS"
@@ -83,7 +90,14 @@
     "message": "Not applied. Refresh the page; browser-protected pages are unavailable."
   },
   "noLogoRules": {
-    "message": "No logo rules for this site. Enable generic rules below."
+    "message": "No logo rules for this site. Pick a logo or enable generic rules below."
+  },
+  "partialLogoStatus": {
+    "message": "Hidden: $OPTIONS$. $NOTE$",
+    "placeholders": {
+      "options": { "content": "$1" },
+      "note": { "content": "$2" }
+    }
   },
   "appliedOne": {
     "message": "Applied to this page · $COUNT$ option",
@@ -122,7 +136,7 @@
     }
   },
   "siteUnsupported": {
-    "message": "Tab controls available · generic logo rules optional"
+    "message": "Tab controls available · pick a logo in More settings"
   },
   "globalAvailable": {
     "message": "Global defaults are still available."
@@ -144,5 +158,8 @@
   },
   "site_x": {
     "message": "X / Twitter"
+  },
+  "site_reddit": {
+    "message": "Reddit"
   }
 }

@@ -27,7 +27,7 @@
     "message": "当前网站的隐藏设置"
   },
   "pageBranding": {
-    "message": "页面品牌标识"
+    "message": "预设页面 Logo"
   },
   "tabIcon": {
     "message": "标签页图标"
@@ -52,6 +52,13 @@
   "moreSettings": {
     "message": "更多设置"
   },
+  "pickLogo": { "message": "点选要隐藏的 Logo" },
+  "undoPick": { "message": "撤销上一次点选" },
+  "pickHint": { "message": "点击 Logo 即可在此网站隐藏它，按 Esc 取消。" },
+  "pickCancel": { "message": "取消" },
+  "pickDifferent": { "message": "请将指针移到 Logo 上，出现边框后再点击。" },
+  "pickSaveError": { "message": "未能保存此 Logo。可再次点击重试，或取消点选。" },
+  "pickUnavailable": { "message": "请刷新网页，再重新点选 Logo。" },
   "genericControlsLabel": {
     "message": "当前网站的补充规则"
   },
@@ -59,7 +66,7 @@
     "message": "通用 Logo 规则"
   },
   "genericNote": {
-    "message": "匹配页眉中的常见 Logo。需开启“页面品牌标识”，可能隐藏其他符合规则的图片。"
+    "message": "开启「预设页面 Logo」后，匹配页眉中的常见 Logo，也可能隐藏其他符合规则的图片。"
   },
   "globalDefaults": {
     "message": "全局默认设置"
@@ -83,7 +90,14 @@
     "message": "尚未应用，请刷新网页后重试；浏览器保护页面不支持此功能。"
   },
   "noLogoRules": {
-    "message": "此网站暂无专用 Logo 规则，可在下方开启通用规则。"
+    "message": "此网站暂无专用 Logo 规则，可在下方点选 Logo 或开启通用规则。"
+  },
+  "partialLogoStatus": {
+    "message": "已隐藏$OPTIONS$。$NOTE$",
+    "placeholders": {
+      "options": { "content": "$1" },
+      "note": { "content": "$2" }
+    }
   },
   "appliedOne": {
     "message": "已应用到此页面 · $COUNT$ 项",
@@ -122,7 +136,7 @@
     }
   },
   "siteUnsupported": {
-    "message": "支持隐藏标签页信息 · 可选通用 Logo 规则"
+    "message": "支持隐藏标签页信息，可在「更多设置」中点选 Logo。"
   },
   "globalAvailable": {
     "message": "仍可调整全局默认设置。"
@@ -144,5 +158,8 @@
   },
   "site_x": {
     "message": "X / Twitter"
+  },
+  "site_reddit": {
+    "message": "Reddit"
   }
 }

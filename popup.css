@@ -41,6 +41,8 @@ input[role="switch"]:checked::before { transform: translateX(15px); }
 :disabled { opacity: .5; cursor: default; }
 .hint { font-size: 11px; }
 .text-button { padding: 8px 0; text-align: left; border: 0; color: var(--accent); background: transparent; font-size: 11px; }
+.pick-actions { display: flex; flex-wrap: wrap; gap: 0 16px; }
+#pickLogo { font-size: 13px; font-weight: 600; }
 details { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
 summary { cursor: pointer; font-weight: 600; }
 #globalControls { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 10px; }
